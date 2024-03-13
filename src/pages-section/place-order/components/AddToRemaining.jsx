@@ -1,13 +1,15 @@
 import axios from 'axios';
+import Link from 'next/link';
 import React, { useEffect, useState } from 'react';
 
 const AddToRemaining = ({ order, totalBill, onAddToRemaining }) => {
-	const [name, setName] = useState('');
 	const [date, setDate] = useState('');
 	const [paidAmount, setPaidAmount] = useState('');
 	const [remainingAmount, setRemainingAmount] = useState(totalBill);
 	const [totalAmount, setTotalAmount] = useState(totalBill);
 	const [customers, setCustomers] = useState([]);
+	const [selectedCustomer, setSelectedCustomer] = useState('');
+	const [filteredCustomer, setFilteredCustomer] = useState('');
 
 	const handleRemainingAmount = () => {
 		setRemainingAmount(totalBill - Number(paidAmount));
@@ -20,35 +22,33 @@ const AddToRemaining = ({ order, totalBill, onAddToRemaining }) => {
 	const handleSubmit = async (e) => {
 		e.preventDefault();
 		try {
-			const selectedCustomer = customers.find(
-				(customer) => customer.name === name
-			);
-			if (!selectedCustomer) {
-				console.error('Selected customer not found');
-				return;
-			}
-			const id = selectedCustomer._id;
-			const formData = {
-				date,
-				paidAmount: Number(paidAmount),
-				remainingAmount: Number(remainingAmount),
-				totalAmount: Number(totalAmount),
-			};
+			if (filteredCustomer && filteredCustomer._id) {
+				const id = filteredCustomer._id;
+				console.log(id, 'id is here');
 
-			if (onAddToRemaining) {
-				onAddToRemaining(formData, id);
-			}
+				const formData = {
+					date,
+					paidAmount: Number(paidAmount),
+					remainingAmount: Number(remainingAmount),
+					totalAmount: Number(totalAmount),
+					order,
+				};
 
-			setName('');
-			setDate('');
-			setPaidAmount('');
-			setRemainingAmount(totalBill);
-			setTotalAmount(totalBill);
+				if (onAddToRemaining) {
+					onAddToRemaining(formData, id);
+				}
+				setSelectedCustomer('');
+				setDate('');
+				setPaidAmount('');
+				setRemainingAmount(totalBill);
+				setTotalAmount(totalBill);
+			} else {
+				console.error('No customer found or missing _id property.');
+			}
 		} catch (error) {
 			console.error('Error submitting form:', error.message);
 		}
 	};
-
 	useEffect(() => {
 		const AllCustomers = async () => {
 			try {
@@ -65,62 +65,65 @@ const AddToRemaining = ({ order, totalBill, onAddToRemaining }) => {
 		};
 		AllCustomers();
 	}, []);
+
+	const handleFindCustomer = () => {
+		const customer = customers.find(
+			(customer) =>
+				customer.name.toLowerCase() === selectedCustomer.toLowerCase()
+		);
+		setFilteredCustomer(customer);
+		console.log(filteredCustomer, 'filterCustomer');
+	};
 	return (
 		<div>
-			<form onSubmit={handleSubmit}>
-				<label htmlFor="name">Name</label>
-				<select
-					name="name"
-					id="name"
-					value={name}
-					onChange={(e) => setName(e.target.value)}
-				>
-					<option value="" disabled>
-						Select a customer
-					</option>
-					{customers.map((customer) => (
-						<option key={customer._id} value={customer.name}>
-							{customer.name}
-						</option>
-					))}
-				</select>
-				<label htmlFor="date">Date</label>
-				<input
-					type="date"
-					id="date"
-					placeholder="Enter Date"
-					value={date}
-					onChange={(e) => setDate(e.target.value)}
-				/>
-				<label htmlFor="paidAmount">PaidAmount</label>
-				<input
-					type="number"
-					id="paidAmount"
-					name="paidAmount"
-					placeholder="Enter paid amount"
-					value={paidAmount}
-					onChange={(e) => setPaidAmount(e.target.value)}
-				/>
-				<label htmlFor="remainingAmount">RemainingAmount</label>
-				<input
-					type="number"
-					id="remainingAmount"
-					name="remainingAmount"
-					placeholder="Remaining amount"
-					value={remainingAmount}
-					onChange={handleRemainingAmount}
-				/>
-				<label htmlFor="totalAmount">TotalAmount</label>
-				<input
-					type="number"
-					id="totalAmount"
-					name="totalAmount"
-					placeholder="Total amount"
-					value={totalAmount}
-					onChange={handleTotalAmount}
-				/>
-				<button type="submit">Add to remaining</button>
-			</form>
+			<label htmlFor="name">Name</label>
+			<input
+				type="text"
+				id="name"
+				value={selectedCustomer}
+				onChange={(e) => setSelectedCustomer(e.target.value)}
+			/>
+			<button onClick={handleFindCustomer}>Find customer</button>
+			{filteredCustomer && (
+				<form onSubmit={handleSubmit}>
+					<label htmlFor="date">Date</label>
+					<input
+						type="date"
+						id="date"
+						placeholder="Enter Date"
+						value={date}
+						onChange={(e) => setDate(e.target.value)}
+					/>
+					<label htmlFor="paidAmount">PaidAmount</label>
+					<input
+						type="number"
+						id="paidAmount"
+						name="paidAmount"
+						placeholder="Enter paid amount"
+						value={paidAmount}
+						onChange={(e) => setPaidAmount(e.target.value)}
+					/>
+					<label htmlFor="remainingAmount">RemainingAmount</label>
+					<input
+						type="number"
+						id="remainingAmount"
+						name="remainingAmount"
+						placeholder="Remaining amount"
+						value={remainingAmount}
+						onChange={handleRemainingAmount}
+					/>
+					<label htmlFor="totalAmount">TotalAmount</label>
+					<input
+						type="number"
+						id="totalAmount"
+						name="totalAmount"
+						placeholder="Total amount"
+						value={totalAmount}
+						onChange={handleTotalAmount}
+					/>
+					<button type="submit">Add to remaining</button>
+				</form>
+			)}
 		</div>
 	);
 };

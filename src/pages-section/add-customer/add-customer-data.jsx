@@ -17,7 +17,7 @@ const AddCustomerData = () => {
 			const response = await axios.post('/api/add-customer', values);
 			if (response.status === 200) {
 				toast.success('Customer added successfully');
-				router.push('/');
+				router.push('/place-order');
 			} else {
 				toast.error('Error in adding customer');
 			}

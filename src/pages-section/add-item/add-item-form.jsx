@@ -61,9 +61,10 @@ const AddItemForm = (props) => {
 							onBlur={handleBlur}
 							value={values.unit}
 						>
-							<option value="pos">pos</option>
-							<option value="gram">gram</option>
-							<option value="kilogram">kilogram</option>
+							<option value="">Select unit</option>
+							<option value="nos">nos</option>
+							<option value="gm">gm</option>
+							<option value="kg">kg</option>
 						</select>
 						{touched.unit && errors.unit && <div>{errors.unit}</div>}
 						<label htmlFor="costPrice">CostPrice</label>

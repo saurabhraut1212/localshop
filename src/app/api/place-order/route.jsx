@@ -3,14 +3,17 @@ import Order from '../../../models/orderModel';
 import { connectDb } from '../../../db/dbconfig';
 
 export async function POST(request) {
-	const order = await request.json();
+	const { items, totalBill } = await request.json();
+	console.log(items, 'items');
+	console.log(totalBill, 'totalBill');
 
 	try {
 		await connectDb();
 
-		const newOrder = await Order.create({ items: order });
+		const newOrder = await Order.create({ items, totalBill });
 		return NextResponse.json({ data: newOrder }, { status: 200 });
 	} catch (error) {
-		return NextResponse.json({ message: error.message }, { status: 400 });
+		console.log(error.message);
+		return NextResponse.json({ message: error.message }, { status: 500 });
 	}
 }

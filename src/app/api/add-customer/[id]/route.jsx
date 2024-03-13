@@ -7,7 +7,7 @@ export async function POST(request, { params }) {
 
 	try {
 		await connectDb();
-		const { date, paidAmount, remainingAmount, totalAmount } =
+		const { date, paidAmount, remainingAmount, totalAmount, order } =
 			await request.json();
 
 		const updatedCustomer = await Customer.findByIdAndUpdate(
@@ -20,6 +20,7 @@ export async function POST(request, { params }) {
 						remainingAmount,
 						totalAmount,
 					},
+					orderDetails: order,
 				},
 			},
 			{
