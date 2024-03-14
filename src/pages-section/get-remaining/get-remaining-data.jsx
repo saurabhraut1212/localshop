@@ -1,141 +1,89 @@
-import axios from 'axios';
 import React, { useEffect, useState } from 'react';
+import axios from 'axios';
 import toast from 'react-hot-toast';
-import Table from './components/Table';
 
 const GetRemainingData = () => {
 	const [items, setItems] = useState([]);
 	const [searchItem, setSearchItem] = useState('');
-	const [filteredData, setFilteredData] = useState([]);
-	const [selectedId, setSelectedId] = useState('');
-	const [overAllRemaining, setOverAllRemaining] = useState(null);
+	const [filteredData, setFilteredData] = useState('');
+	const [amount, setAmount] = useState(0);
+
+	const GetCustomerData = async () => {
+		try {
+			const response = await axios.get('/api/get-remaining');
+
+			if (response.status === 200) {
+				toast.success('Getting items');
+				setItems(response.data.data);
+			} else {
+				toast.error('Error in getting items');
+			}
+		} catch (error) {
+			toast.error(error.message);
+		}
+	};
 
 	useEffect(() => {
-		const fetchRemainingData = async () => {
-			try {
-				const response = await axios.get('/api/get-remaining');
-				if (response.status === 200) {
-					setItems(response.data.data);
-					toast.success('Getting RemainingData Items');
-				} else {
-					toast.error('Error in getting items');
-				}
-			} catch (error) {
-				toast.error(error.message);
-			}
-		};
-
-		fetchRemainingData();
+		GetCustomerData();
 	}, []);
 
-	useEffect(() => {
-		totalRemainingAmount();
-	}, [selectedId, items]);
-
-	const handleItemDelete = async (itemId, billDetailId) => {
-		try {
-			const response = await axios.delete(
-				`/api/get-remaining/${itemId}/${billDetailId}`
-			);
-			if (response.status === 200) {
-				toast.success('Item deleted successfully');
-				fetchRemainingData();
-			} else {
-				toast.error('Error deleting item');
-			}
-		} catch (error) {
-			toast.error(error.message);
-		}
-	};
-
-	const fetchRemainingData = async () => {
-		try {
-			const updatedResponse = await axios.get('/api/get-remaining');
-			if (updatedResponse.status === 200) {
-				setItems(updatedResponse.data.data);
-				totalRemainingAmount();
-			} else {
-				toast.error('Error in fetching updated items');
-			}
-		} catch (error) {
-			toast.error(error.message);
-		}
-	};
-
-	const filteredDataFun = () => {
+	const searchHandler = () => {
 		if (searchItem.trim() === '') {
 			return;
 		}
-		const response = items.filter((item) =>
-			item.name.toLowerCase().includes(searchItem.toLowerCase())
+		const response = items.find(
+			(item) => item.name.toLowerCase() === searchItem.toLowerCase()
 		);
 
 		setFilteredData(response);
-		setSelectedId(response.length > 0 ? response[0]._id : '');
-		setSearchItem('');
-		totalRemainingAmount();
 	};
 
-	const totalRemainingAmount = () => {
-		const itemToCalculate = items.find((item) => item._id === selectedId);
-		if (!itemToCalculate) {
-			setOverAllRemaining(0);
-			return;
+	const updateOverAllRemaining = async () => {
+		const id = filteredData._id;
+		try {
+			const response = await axios.put(`/api/get-remaining/${id}`, {
+				updatedValue: amount,
+			});
+			if (response.status === 200) {
+				toast.success('OverAllRemaining value is updated');
+				setFilteredData(response.data.data);
+				GetCustomerData();
+			} else {
+				toast.error('Error in updating overAllRemaining');
+			}
+		} catch (error) {
+			toast.error(error.message);
 		}
-		const totalAmount = itemToCalculate.billDetails.reduce(
-			(accumulator, billDetail) => accumulator + billDetail.remainingAmount,
-			0
-		);
-		setOverAllRemaining(totalAmount);
 	};
-
 	return (
 		<div>
-			<label htmlFor="search">Search</label>
 			<input
 				type="text"
-				id="search"
-				name="search"
+				placeholder="Search customer"
 				value={searchItem}
 				onChange={(e) => setSearchItem(e.target.value)}
 			/>
-			<button
-				onClick={() => {
-					filteredDataFun();
-					totalRemainingAmount();
-				}}
-			>
-				Search
-			</button>
-			{filteredData.length > 0 ? (
-				<table>
-					<thead>
-						<tr>
-							<th>Name</th>
-							<th>Date</th>
-							<th>PaidAmount</th>
-							<th>RemainingAmount</th>
-							<th>Delete</th>
-						</tr>
-					</thead>
-					<tbody>
-						{filteredData.map((item) =>
-							item.billDetails.map((billDetail) => (
-								<Table
-									key={billDetail._id}
-									item={item}
-									billDetail={billDetail}
-									onDelete={handleItemDelete}
-								/>
-							))
-						)}
-					</tbody>
-					<tfoot>
-						<tr>TotalRemaining:{overAllRemaining}</tr>
-					</tfoot>
-				</table>
-			) : (
-				<p>No items available</p>
+			<button onClick={searchHandler}>Search</button>
+			{filteredData && (
+				<>
+					<input
+						type="number"
+						placeholder="Enter amount to be paid"
+						value={amount || ''}
+						onChange={(e) => {
+							const newAmount = parseFloat(e.target.value);
+							setAmount(isNaN(newAmount) ? '' : newAmount);
+						}}
+					/>
+					<button onClick={updateOverAllRemaining}>
+						UpdateRemainingAmount
+					</button>
+					{/* Display overall remaining amount */}
+					<p>
+						OverAllRemaining:
+						{filteredData.overAllRemaining}
+					</p>
+				</>
 			)}
 		</div>
 	);

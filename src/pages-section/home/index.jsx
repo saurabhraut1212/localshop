@@ -5,15 +5,18 @@ import Header from '../../components/Header';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
 
+// ... (previous code)
+
 const HomePage = () => {
 	const router = useRouter();
 
 	const [customer, setCustomer] = useState('');
 	const [allCustomers, setAllCustomers] = useState([]);
 	const [filteredData, setFilteredData] = useState(null);
+	const [searchClicked, setSearchClicked] = useState(false);
 
 	useEffect(() => {
-		const FetchAllCustomers = async () => {
+		const fetchAllCustomers = async () => {
 			try {
 				const response = await axios.get('/api/get-remaining');
 				if (response.status === 200) {
@@ -25,19 +28,31 @@ const HomePage = () => {
 				console.error(error.message);
 			}
 		};
-		FetchAllCustomers();
+		fetchAllCustomers();
 	}, []);
+
 	const handleSearchCustomer = () => {
 		const filterData = allCustomers.find(
 			(customerItem) =>
 				customerItem.name.toLowerCase() === customer.toLowerCase()
 		);
 		setFilteredData(filterData);
+		setSearchClicked(true);
+	};
+
+	const resetCustomerInput = () => {
+		setCustomer(''); // Reset customer input after search is done
 	};
 
 	const navigateToPage = (path) => {
 		router.push(path);
 	};
+
+	const handleInputChange = (e) => {
+		setCustomer(e.target.value);
+		setSearchClicked(false);
+	};
+
 	return (
 		<div>
 			<Header />
@@ -47,22 +62,32 @@ const HomePage = () => {
 				type="text"
 				placeholder="Search account by name"
 				value={customer}
-				onChange={(e) => setCustomer(e.target.value)}
+				onChange={handleInputChange}
 			/>
 			<button onClick={handleSearchCustomer}>Search</button>
-			{filteredData !== null && (
+			{searchClicked && customer !== '' && filteredData !== null && (
 				<>
 					{filteredData ? (
 						<>
-							<p>Already have an account go for order</p>
-							<button onClick={() => navigateToPage('/place-order')}>
+							<p>Already have an account, go for an order</p>
+							<button
+								onClick={() => {
+									resetCustomerInput();
+									navigateToPage('/place-order');
+								}}
+							>
 								Place Order
 							</button>
 						</>
 					) : (
 						<>
 							<p>Do not have an account ...first create the account</p>
-							<button onClick={() => navigateToPage('/add-customer')}>
+							<button
+								onClick={() => {
+									resetCustomerInput();
+									navigateToPage('/add-customer');
+								}}
+							>
 								Add Customer
 							</button>
 						</>

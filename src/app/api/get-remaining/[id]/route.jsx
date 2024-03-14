@@ -1,39 +1,27 @@
 import { NextResponse } from 'next/server';
-import Customer from '../../../../models/customerModel';
 import { connectDb } from '../../../../db/dbconfig';
+import Customer from '../../../../models/customerModel';
 
-export async function POST(request, { params }) {
+export async function PUT(request, { params }) {
 	const { id } = params;
-
+	const { updatedValue } = await request.json();
 	try {
 		await connectDb();
-		const { date, paidAmount, remainingAmount, totalAmount, order } =
-			await request.json();
-
 		const customer = await Customer.findById(id);
-
 		if (!customer) {
 			return NextResponse.json(
-				{ message: 'Customer with that id is not found' },
+				{ message: 'Customer with that id is not getting' },
 				{ status: 400 }
 			);
 		}
 
-		const newOverallRemaining = customer.overAllRemaining + remainingAmount;
-
+		const updatedTotalRemaining = customer.overAllRemaining - updatedValue;
 		const updatedCustomer = await Customer.findByIdAndUpdate(
 			id,
 			{
-				$push: {
-					billDetails: {
-						date,
-						paidAmount,
-						remainingAmount,
-						totalAmount,
-					},
-					orderDetails: order,
+				$set: {
+					overAllRemaining: updatedTotalRemaining,
 				},
-				$set: { overAllRemaining: newOverallRemaining },
 			},
 			{
 				new: true,
@@ -43,7 +31,7 @@ export async function POST(request, { params }) {
 		if (!updatedCustomer) {
 			return NextResponse.json(
 				{ message: 'Failed to update customer with that id' },
-				{ status: 500 }
+				{ status: 400 }
 			);
 		}
 

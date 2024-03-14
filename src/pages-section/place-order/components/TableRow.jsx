@@ -12,6 +12,19 @@ const TableRow = ({
 	const [customPrice, setCustomPrice] = useState(0);
 	const [unit, setUnit] = useState('');
 
+	useEffect(() => {
+		if (unit === 'gm') {
+			const convertedQuantity = newQuantity / 1000;
+			if (convertedQuantity > item.quantity) {
+				toast.error('No available quantity');
+				setNewQuantity(0);
+			}
+		} else if (unit === 'kg' && newQuantity > item.quantity) {
+			toast.error('No available quantity');
+			setNewQuantity(0);
+		}
+	}, [newQuantity, unit, item.quantity]);
+
 	const updateTotal = (newQuantity) => {
 		console.log(newQuantity, 'newQuantity');
 		const convertedQuantity = unit === 'gm' ? newQuantity / 1000 : newQuantity;
@@ -50,17 +63,9 @@ const TableRow = ({
 		});
 	};
 
-	useEffect(() => {
-		if (newQuantity > item.quantity) {
-			toast.error('No available quantity');
-			setNewQuantity('');
-			return;
-		}
-	}, [newQuantity]);
-
 	const handleUpdate = () => {
-		const updatedQuantity = newQuantity;
-		onUpdateQuantity(item._id, updatedQuantity);
+		const convertedQuantity = unit === 'gm' ? newQuantity / 1000 : newQuantity;
+		onUpdateQuantity(item._id, convertedQuantity);
 	};
 
 	const isItemInOrder = order.some(

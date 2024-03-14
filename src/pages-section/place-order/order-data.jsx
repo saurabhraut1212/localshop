@@ -270,7 +270,7 @@ const OrderData = () => {
 					)}
 				</>
 			) : (
-				<p>No items available</p>
+				''
 			)}
 		</div>
 	);

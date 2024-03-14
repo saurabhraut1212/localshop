@@ -21,6 +21,7 @@ const customerSchema = new mongoose.Schema(
 		mobileNo: { type: Number, required: true },
 		billDetails: [billDetailsSchema],
 		orderDetails: [orderSchema],
+		overAllRemaining: { type: Number, default: 0 },
 	},
 	{
 		timestamps: true,
